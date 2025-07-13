@@ -92,80 +92,70 @@ void write_image_list(int fd)
  */
 void image_filter_response(int fd, const ReqData *reqData)
 {
-    char *filter = reqData->params[0].name;
-    char *image = reqData->params[1].name;
-    char *filter_value = reqData->params[0].value;
-    char *image_value = reqData->params[1].value;
-    printf("%s", image);
-    printf("%s", filter);
-    int good_flag = 0;
-
-    if (strcmp(filter, "filter") != 0 || strcmp(image, "image") != 0)
-    {
-        if (strcmp(image, "filter") != 0 || strcmp(filter, "image") != 0)
-        {
-            bad_request_response(fd, "Filter and image parameters are required");
-            good_flag = 1;
+    char *filter_name = NULL;
+    char *image_name = NULL;
+    char *filter_value = NULL;
+    char *image_value = NULL;
+    
+    // Find filter and image parameters regardless of order
+    for (int i = 0; i < MAX_QUERY_PARAMS && reqData->params[i].name != NULL; i++) {
+        if (strcmp(reqData->params[i].name, "filter") == 0) {
+            filter_name = reqData->params[i].name;
+            filter_value = reqData->params[i].value;
+        } else if (strcmp(reqData->params[i].name, "image") == 0) {
+            image_name = reqData->params[i].name;
+            image_value = reqData->params[i].value;
         }
-        else
-        {
-
-            char *temp = malloc(strlen(filter) + strlen(image) + strlen(filter_value) + strlen(image_value) + 1);
-            strcpy(temp, filter);
-            strcpy(filter, image);
-            strcpy(image, temp);
-
-            strcpy(temp, filter_value);
-            strcpy(filter_value, image_value);
-            strcpy(image_value, temp);
-            free(temp);
-        }
+    }
+    
+    // Check if both parameters were found
+    if (filter_name == NULL || image_name == NULL || filter_value == NULL || image_value == NULL) {
+        bad_request_response(fd, "Filter and image parameters are required");
+        return;
     }
 
     char *image_file = malloc(strlen(IMAGE_DIR) + strlen(image_value) + 1);
     strcpy(image_file, IMAGE_DIR);
     strcat(image_file, image_value);
-    char *filter_file = malloc(strlen(IMAGE_DIR) + strlen(filter_value) + 1);
+    char *filter_file = malloc(strlen(FILTER_DIR) + strlen(filter_value) + 1);
     strcpy(filter_file, FILTER_DIR);
     strcat(filter_file, filter_value);
 
-    if (good_flag == 0)
+    // Check for path traversal attacks
+    if (strchr(filter_value, '/') != NULL || strchr(image_value, '/') != NULL)
     {
-        if (strchr(filter_value, '/') != NULL || strchr(image_value, '/') != NULL)
-        {
-            bad_request_response(fd, "Filter and image parameters cannot contain a slash character");
-            good_flag = 1;
-        }
-    }
-    if (good_flag == 0)
-    {
-        if ((access(filter_file, F_OK) == -1 || access(image_file, F_OK) == -1))
-        {
-            bad_request_response(fd, "Filter value or image does not exist");
-            printf("%s", image_file);
-            printf("%s", filter_file);
-            good_flag = 1;
-        }
-    }
-
-    if (good_flag == 0)
-    {
-        FILE *f = fopen(image_file, "r");
-
-        write_image_response_header(fd);
-        dup2(fileno(f), fileno(stdin));
-        fclose(f);
-        dup2(fd, STDOUT_FILENO);
-
-        execl(filter_file, filter, NULL);
-        perror("execl");
-        exit(1);
-    }
-    else
-    {
+        bad_request_response(fd, "Filter and image parameters cannot contain a slash character");
         free(image_file);
         free(filter_file);
+        return;
     }
+    
+    // Check if files exist and have correct permissions
+    if (access(filter_file, X_OK) == -1 || access(image_file, R_OK) == -1)
+    {
+        bad_request_response(fd, "Filter value or image does not exist");
+        free(image_file);
+        free(filter_file);
+        return;
+    }
+
+    // Execute the filter
+    FILE *f = fopen(image_file, "r");
+    if (f == NULL) {
+        bad_request_response(fd, "Could not open image file");
+        free(image_file);
+        free(filter_file);
+        return;
+    }
+
+    write_image_response_header(fd);
+    dup2(fileno(f), STDIN_FILENO);
+    fclose(f);
+    dup2(fd, STDOUT_FILENO);
+
+    execl(filter_file, filter_value, NULL);
+    perror("execl");
+    exit(1);
 }
 
 /*
