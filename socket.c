@@ -2,34 +2,30 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <arpa/inet.h>     /* inet_ntoa */
-#include <netdb.h>         /* gethostname */
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <sys/socket.h>
 
 #include "socket.h"
 
-/*
- * Initialize a server address associated with the given port.
- */
+// Initialize a server address associated with the given port
 struct sockaddr_in *init_server_addr(int port) {
     struct sockaddr_in *addr = malloc(sizeof(struct sockaddr_in));
 
-    // Allow sockets across machines.
+    // Allow sockets across machines
     addr->sin_family = PF_INET;
-    // The port the process will listen on.
+    // The port the process will listen on
     addr->sin_port = htons(port);
-    // Clear this field; sin_zero is used for padding for the struct.
+    // Clear this field; sin_zero is used for padding for the struct
     memset(&(addr->sin_zero), 0, 8);
 
-    // Listen on all network interfaces.
+    // Listen on all network interfaces
     addr->sin_addr.s_addr = INADDR_ANY;
 
     return addr;
 }
 
-/*
- * Create and setup a socket for a server to listen on.
- */
+// Create and setup a socket for a server to listen on
 int setup_server_socket(struct sockaddr_in *self, int num_queue) {
     int soc = socket(PF_INET, SOCK_STREAM, 0);
     if (soc < 0) {
@@ -49,12 +45,12 @@ int setup_server_socket(struct sockaddr_in *self, int num_queue) {
 
     // Associate the process with the address and a port
     if (bind(soc, (struct sockaddr *)self, sizeof(*self)) < 0) {
-        // bind failed; could be because port is in use.
+        // bind failed; could be because port is in use
         perror("bind");
         exit(1);
     }
 
-    // Set up a queue in the kernel to hold pending connections.
+    // Set up a queue in the kernel to hold pending connections
     if (listen(soc, num_queue) < 0) {
         // listen failed
         perror("listen");
@@ -64,11 +60,7 @@ int setup_server_socket(struct sockaddr_in *self, int num_queue) {
     return soc;
 }
 
-
-/*
- * Wait for and accept a new connection.
- * Return -1 if the accept call failed.
- */
+// Wait for and accept a new connection
 int accept_connection(int listenfd) {
     struct sockaddr_in peer;
     unsigned int peer_len = sizeof(peer);
@@ -88,13 +80,10 @@ int accept_connection(int listenfd) {
     }
 }
 
-
 /******************************************************************************
  * Client-specific functions
  *****************************************************************************/
-/*
- * Create a socket and connect to the server indicated by the port and hostname
- */
+// Create a socket and connect to the server indicated by the port and hostname
 int connect_to_server(int port, const char *hostname) {
     int soc = socket(PF_INET, SOCK_STREAM, 0);
     if (soc < 0) {
@@ -103,14 +92,14 @@ int connect_to_server(int port, const char *hostname) {
     }
     struct sockaddr_in addr;
 
-    // Allow sockets across machines.
+    // Allow sockets across machines
     addr.sin_family = PF_INET;
-    // The port the server will be listening on.
+    // The port the server will be listening on
     addr.sin_port = htons(port);
-    // Clear this field; sin_zero is used for padding for the struct.
+    // Clear this field; sin_zero is used for padding for the struct
     memset(&(addr.sin_zero), 0, 8);
 
-    // Lookup host IP address.
+    // Lookup host IP address
     struct hostent *hp = gethostbyname(hostname);
     if (hp == NULL) {
         fprintf(stderr, "unknown host %s\n", hostname);
@@ -119,7 +108,7 @@ int connect_to_server(int port, const char *hostname) {
 
     addr.sin_addr = *((struct in_addr *) hp->h_addr);
 
-    // Request connection to server.
+    // Request connection to server
     if (connect(soc, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
         perror("connect");
         exit(1);

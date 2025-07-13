@@ -3,12 +3,8 @@
 #include <string.h>
 #include "bitmap.h"
 
-
-/*
- * Main filter loop.
- */
+// Main filter loop - applies Gaussian blur using 3x3 kernel
 void gaussian_filter(Bitmap *bmp) {
-    // TODO: Complete this function.
     Pixel *buf_original_row1 = malloc(sizeof(Pixel)*bmp->width);
     Pixel *buf_original_row2 = malloc(sizeof(Pixel)*bmp->width);
     Pixel *buf_original_row3 = malloc(sizeof(Pixel)*bmp->width);
@@ -57,8 +53,6 @@ void gaussian_filter(Bitmap *bmp) {
 }
 
 int main() {
-    // Run the filter program with gaussian_filter to process the pixels.
-    // You shouldn't need to change this implementation.
     run_filter(gaussian_filter, 1);
     return 0;
 }

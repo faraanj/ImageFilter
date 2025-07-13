@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <errno.h>
-#include <netinet/in.h> /* Internet domain header */
+#include <netinet/in.h>
 
 #include "socket.h"
 #include "request.h"
@@ -20,24 +20,7 @@
 #define BACKLOG 10
 #define MAX_CLIENTS 10
 
-/*
- * Read data from a client socket, and, if there is enough information to
- * determine the type of request, spawn a child process to respond to the
- * request.
- *
- * Return 1 if one of the conditions hold:
- *   a) No bytes were read from the socket. (The client has likely closed the
- *      connection.)
- *   b) A child process has been created to respond to the request.
- *
- * This return value indicates that the server process should close the socket.
- * Otherwise, return 0 (indicating that the server must continue to monitor the
- * socket).
- *
- * Complete this function according to the comments within.
- * Note that you'll be doing this incrementally, adding to the function as you
- * complete the different parts of the assignment.
- */
+// Read data from a client socket and spawn child process to respond
 int handle_client(ClientState *client)
 {
     // Read in data from the client's socket into its buffer,
@@ -57,15 +40,7 @@ int handle_client(ClientState *client)
         return 1;
     }
 
-    // At this point client->reqData is not null, and so we are guaranteed
-    // to spawn a child process to handle the request (so we return 1).
-    // First, call fork. In the *parent* process, just return 1.
-    // In the *child* process, check the values in client->reqData to determine
-    // how to respond to the request.
-    // The child should call exit(0) (rather than return) to prevent it from
-    // executing the main server loop that listens for new requests.
-
-    // IMPLEMENT THIS
+    // Fork process - parent returns 1, child handles request
     pid_t result = fork();
 
     if (result < 0)
@@ -122,7 +97,7 @@ int main(int argc, char **argv)
 
     struct sockaddr_in *servaddr = init_server_addr(PORT);
 
-    // Create an fd to listen to new connections.
+    // Create an fd to listen to new connections
     int listenfd = setup_server_socket(servaddr, BACKLOG);
 
     // Print out information about this server
@@ -175,12 +150,12 @@ int main(int argc, char **argv)
         }
 
         if (FD_ISSET(listenfd, &rset))
-        { // New client connection.
+        { // New client connection
             int new_client_fd = accept_connection(listenfd);
             if (new_client_fd >= 0)
             {
                 maxfd = (new_client_fd > maxfd) ? new_client_fd : maxfd;
-                FD_SET(new_client_fd, &allset); // Add new descriptor to set.
+                FD_SET(new_client_fd, &allset); // Add new descriptor to set
 
                 for (int i = 0; i < MAX_CLIENTS; i++)
                 {
@@ -195,11 +170,10 @@ int main(int argc, char **argv)
             nready -= 1;
         }
 
-        // The nready is just an optimization; no harm in checking all fds
-        // except efficiency
+        // Check all client sockets for ready data
         for (int i = 0; i < MAX_CLIENTS && nready > 0; i++)
         {
-            // Check whether clients[i] has an active, ready socket.
+            // Check whether clients[i] has an active, ready socket
             if (clients[i].sock < 0 || !FD_ISSET(clients[i].sock, &rset))
             {
                 continue;

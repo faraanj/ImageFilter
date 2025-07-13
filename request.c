@@ -15,10 +15,8 @@ ClientState *init_clients(int n)
     }
     return clients;
 }
-/*
- * Remove the client from the client array, free any memory allocated for
- * fields of the ClientState struct, and close the socket.
- */
+
+// Remove the client from the client array and free memory
 void remove_client(ClientState *cs)
 {
     if (cs->reqData != NULL)
@@ -38,12 +36,7 @@ void remove_client(ClientState *cs)
     cs->num_bytes = 0;
 }
 
-/*
- * Search the first inbuf characters of buf for a network newline ("\r\n").
- * Return the index *immediately after* the location of the '\n'
- * if the network newline is found, or -1 otherwise.
- * Definitely do not use strchr or any other string function in here. (Why not?)
- */
+// Search the first inbuf characters of buf for a network newline ("\r\n")
 int find_network_newline(const char *buf, int inbuf)
 {
 
@@ -61,18 +54,10 @@ int find_network_newline(const char *buf, int inbuf)
     return -1;
 }
 
-/*
- * Removes one line (terminated by \r\n) from the client's buffer.
- * Update client->num_bytes accordingly.
- *
- * For example, if `client->buf` contains the string "hello\r\ngoodbye\r\nblah",
- * after calling remove_line on it, buf should contain "goodbye\r\nblah"
- * Remember that the client buffer is *not* null-terminated automatically.
- */
+// Removes one line (terminated by \r\n) from the client's buffer
 void remove_buffered_line(ClientState *client)
 {
 
-    // IMPLEMENT THIS
     int index = 0;
     if ((index = find_network_newline(client->buf, client->num_bytes)) != -1)
     {
@@ -85,14 +70,9 @@ void remove_buffered_line(ClientState *client)
  * Read some data into the client buffer. Append new data to data already
  * in the buffer.  Update client->num_bytes accordingly.
  * Return the number of bytes read in, or -1 if the read failed.
-
- * Be very careful with memory here: there might be existing data in the buffer
- * that you don't want to overwrite, and you also don't want to go past
- * the end of the buffer, and you should ensure the string is null-terminated.
  */
 int read_from_client(ClientState *client)
 {
-    // IMPLEMENT THIS
     int new_data_size = MAXLINE - client->num_bytes - 1;
     int num_read = 0;
     if (new_data_size != 0)
@@ -123,8 +103,6 @@ void log_request(const ReqData *req);
  */
 int parse_req_start_line(ClientState *client)
 {
-
-    // IMPLEMENT THIS
     int index = 0;
     if ((index = find_network_newline(client->buf, client->num_bytes)) != -1)
     {
@@ -154,8 +132,6 @@ int parse_req_start_line(ClientState *client)
  */
 void parse_query(ReqData *req, const char *str)
 {
-    // IMPLEMENT THIS
-
     for (int i = 0; i < MAX_QUERY_PARAMS; i++)
     {
         req->params[i].name = NULL;
@@ -277,7 +253,6 @@ char *get_boundary(ClientState *client)
             }
             else
             {
-                // We've found the boundary string!
                 // We are going to add "--" to the beginning to make it easier
                 // to match the boundary line later
                 char *boundary = malloc(where - len_header + 1);

@@ -3,39 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bitmap.h"
- 
- 
-/*
- * Read in bitmap header data from stdin, and return a pointer to
- * a new Bitmap struct containing the important metadata for the image file.
- *
- * TODO: complete this function.
- *
- * Notes:
- *   1. Store header data in an array of unsigned char (essentially
- *      an array of bytes). Examples:
- *      on the stack,
- *          unsigned char data[10];
- *      on the heap,
- *          unsigned char *data = malloc(10);
- *
- *   2. Don't make any assumptions about the header size. You should read in
- *      BMP_HEADER_SIZE_OFFSET bytes first, and then the header size,
- *      and then use this to allocate enough space for the actual header.
- *
- *   3. You can use memcpy to transfer bytes to and from the Bitmap "header" field.
- *      You can even write these bytes to memory allocated for variables of other types!
- *      For example:
- *          unsigned char bytes[4];
- *          int x = 10;
- *          int y;
- *          memcpy(bytes, &x, 4);  // Copy the int x into bytes.
- *          memcpy(&y, bytes, 4);  // Copy the contents of bytes into y.
- *
- *   4. You can use either fread/fwrite or read/write to perform I/O operations here.
- *
- *   5. Make good use of the provided macros in bitmap.h to index into the "header" array.
- */
+
+// Read BMP header and metadata from stdin
 Bitmap *read_header() {
     Bitmap *bitmap = malloc(sizeof(Bitmap));
  
@@ -67,6 +36,7 @@ Bitmap *read_header() {
     unsigned char data6[bitmap->headerSize - BMP_HEIGHT_OFFSET - 4];
     fread(data6,bitmap->headerSize - BMP_HEIGHT_OFFSET - 4,1,stdin);
  
+    // Reconstruct header from read data
     bitmap->header = malloc(bitmap->headerSize);
     memcpy(bitmap->header, data7, BMP_FILE_SIZE_OFFSET);
     memcpy(bitmap->header + BMP_FILE_SIZE_OFFSET, data8, sizeof(int)); 
@@ -79,41 +49,25 @@ Bitmap *read_header() {
     return bitmap;
 }
  
-/*
- * Write out bitmap metadata to stdout.
- * You may add extra fprintf calls to *stderr* here for debugging purposes.
- */
+// Write BMP header to stdout
 void write_header(const Bitmap *bmp) {
     fwrite(bmp->header, bmp->headerSize, 1, stdout);
 }
  
-/*
- * Free the given Bitmap struct.
- */
+// Free bitmap memory
 void free_bitmap(Bitmap *bmp) {
     free(bmp->header);
     free(bmp);
 }
  
-/*
- * Update the bitmap header to record a resizing of the image.
- *
- * TODO: complete this function when working on the "scale" filter.
- *
- * Notes:
- *   1. As with read_header, use memcpy and the provided macros in bitmap.h.
- *
- *   2. bmp->header *must* be updated, as this is what's written out
- *      in write_header.
- *
- *   3. You may choose whether or not to also update bmp->width and bmp->height.
- *      This choice may depend on how you implement the scale filter.
- */
+// Update bitmap header for scaling operations
 void scale(Bitmap *bmp, int scale_factor) {
     bmp->scaleFactor = scale_factor;
     bmp->width = bmp->width * scale_factor;
     bmp->height = bmp->height * scale_factor;
     bmp->fileSize = bmp->headerSize + (bmp->width * bmp->height * 3);
+    
+    // Update header with new dimensions and file size
     unsigned char *header = malloc(bmp->headerSize);
     memcpy(header, bmp->header, BMP_FILE_SIZE_OFFSET);
     memcpy(header + BMP_FILE_SIZE_OFFSET, &(bmp->fileSize), sizeof(int));
@@ -125,14 +79,7 @@ void scale(Bitmap *bmp, int scale_factor) {
     free(header);
 }
  
- 
-/*
- * The "main" function.
- *
- * Run a given filter function, and apply a scale factor if necessary.
- * You don't need to modify this function to make it work with any of
- * the filters for this assignment.
- */
+// Main filter execution function
 void run_filter(void (*filter)(Bitmap *), int scale_factor) {
     Bitmap *bmp = read_header();
  
@@ -141,17 +88,13 @@ void run_filter(void (*filter)(Bitmap *), int scale_factor) {
     }
  
     write_header(bmp);
- 
-    // Note: here is where we call the filter function.
     filter(bmp);
- 
     free_bitmap(bmp);
 }
  
  
 /******************************************************************************
  * The gaussian blur and edge detection filters.
- * You should NOT modify any of the code below.
  *****************************************************************************/
 const int gaussian_kernel[3][3] = {
     {1, 2, 1},

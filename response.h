@@ -23,8 +23,6 @@ void image_upload_response(ClientState *client);
 
 /*
  * The following are generic responses for different HTTP response codes;
- * we have provided these for you to use in various parts of the assignment.
- * Some of them can be customized with a message.
  */
 void not_found_response(int fd);
 void bad_request_response(int fd, const char *message);

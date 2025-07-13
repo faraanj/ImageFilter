@@ -61,8 +61,6 @@ ClientState *init_clients(int n);
 
 /*
  * Frees memory allocated for the given client fields.
- * Doesn't actually free the client itself since it is allocated as part of
- * an array of ClientState, but sets its sock value to -1 to act as a flag.
  */
 void remove_client(ClientState *cs);
 
@@ -88,38 +86,28 @@ int parse_req_start_line(ClientState *client);
 /*
  * Return the boundary string for this request.
  * This should be returned in a separate dynamically-allocated,
- * null-terminated string (note that the boundary in the raw request data is
- * certainly *not* null-terminated).
+ * null-terminated string 
  *
- * Return NULL if no boundary string is found.
+ * Returns NULL if no boundary string is found.
  */
 char *get_boundary(ClientState *client);
 
 /*
  * Return the filename of the bitmap image for this request, using the
- * given boundary string to detect sections.
- * This should be returned in a separate dynamically-allocated,
- * null-terminated string (note that the filename in the raw request data is
- * certainly *not* null-terminated).
- * Make sure not to include the quotation marks in the filename.
- *
- * Return NULL if no filename string is found.
+ * given boundary string to detect sections. 
+ * Returns NULL if no filename string is found.
  */
 char *get_bitmap_filename(ClientState *client, const char *boundary);
 
 /*
- * Finally, read the bitmap image data from the request and write it
+ * Read the bitmap image data from the request and write it
  * to the given fd (representing a file).
  *
- * Use the boundary string to determine when the file data stops,
- * as described on the assignment handout.
+ * Use the boundary string to determine when the file data stops
  *
  * Return 0 if boundary string was found at the end of the request,
  * and -1 otherwise (this indicates a bad request).
  *
- * HINT: You may assume that the characters "\r\n--<boundary>--\r\n" are
- * guaranteed to be the last characters in the request data.
- * Just remember there's no null-terminator.
  */
 int save_file_upload(ClientState *client, const char *boundary, int file_fd);
 

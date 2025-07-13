@@ -46,20 +46,6 @@ void scaling(Bitmap *bmp);
 /*
  * Functions for the row-buffered filters ("convolutions")
  * -------------------------------------------------------
- *
- * row0, row1, and row2 are interpreted as Pixel arrays of length 3.
- * Together, they represent the three rows of a 3-by-3 pixel grid
- * whose middle pixel is the one being transformed.
- *
- * These functions return the transformed pixel value of the middle pixel
- * when applying the corresponding transformation (a gaussian blur or
- * an edge detection operation), using the pixel values in the 3-by-3 grid.
- *
- * You aren't responsible for the calculations themselves, only for calling
- * these functions properly on pointers representing the 3-by-3 grids.
- *
- * Note that these functions should be called *once per pixel in the image*;
- * the returned Pixel values can be immediately written to stdout.
  */
 Pixel apply_gaussian_kernel(Pixel *row0, Pixel *row1, Pixel *row2);
 Pixel apply_edge_detection_kernel(Pixel *row0, Pixel *row1, Pixel *row2);

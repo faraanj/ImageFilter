@@ -5,19 +5,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <dirent.h> // Used to inspect directory contents.
+#include <dirent.h>
 #include "response.h"
 #include "request.h"
 
-// Functions for internal use only.
+// Functions for internal use only
 void write_image_list(int fd);
 void write_image_response_header(int fd);
 
-/*
- * Write the main.html response to the given fd.
- * This response dynamically populates the image-filter form with
- * the filenames located in IMAGE_DIR.
- */
+// Write the main.html response to the given fd
 void main_html_response(int fd)
 {
     char *header =
@@ -37,7 +33,7 @@ void main_html_response(int fd)
         {
             perror("write");
         }
-        // Insert a bit of dynamic Javascript into the HTML page.
+        // Insert dynamic Javascript into the HTML page
         // This assumes there's only one "<script>" element in the page.
         if (strncmp(buf, "<script>", strlen("<script>")) == 0)
         {
@@ -74,22 +70,7 @@ void write_image_list(int fd)
     dprintf(fd, "];\n");
 }
 
-/*
- * Given the socket fd and request data, do the following:
- * 1. Determine whether the request is valid according to the conditions
- *    under the "Input validation" section of Part 3 of the handout.
- *
- *    Ignore all other query parameters, and any other data in the request.
- *    Read about and use the "access" system call to check for the presence of
- *    files *with the correct permissions*.
- *
- * 2. If the request is invalid, send an informative error message as a response
- *    using the internal_server_error_response function.
- *
- * 3. Otherwise, write an appropriate HTTP header for a bitmap file (we've
- *    provided a function to do so), and then use dup2 and execl to run
- *    the specified image filter and write the output directly to the socket.
- */
+// Process image filter requests
 void image_filter_response(int fd, const ReqData *reqData)
 {
     char *filter_name = NULL;
@@ -158,18 +139,10 @@ void image_filter_response(int fd, const ReqData *reqData)
     exit(1);
 }
 
-/*
- * Respond to an image-upload request.
- * We have provided the complete implementation of this function;
- * you shouldn't change it, but instead read through it carefully and implement
- * the required functions in `request.c` according to their docstrings.
- *
- * We've split up the parsing of the rest of the request data into different
- * steps, so at each step it's a bit easier for you to test your code.
- */
+// Respond to an image-upload request
 void image_upload_response(ClientState *client)
 {
-    // First, extract the boundary string for the request.
+    // First, extract the boundary string for the request
     char *boundary = get_boundary(client);
     if (boundary == NULL)
     {
@@ -178,7 +151,7 @@ void image_upload_response(ClientState *client)
     }
     fprintf(stderr, "Boundary string: %s\n", boundary);
 
-    // Use the boundary string to extract the name of the uploaded bitmap file.
+    // Use the boundary string to extract the name of the uploaded bitmap file
     char *filename = get_bitmap_filename(client, boundary);
     if (filename == NULL)
     {
@@ -187,7 +160,7 @@ void image_upload_response(ClientState *client)
         exit(1);
     }
 
-    // If the file already exists, send a Bad Request error to the user.
+    // If the file already exists, send a Bad Request error to the user
     char *path = malloc(strlen(IMAGE_DIR) + strlen(filename) + 1);
     strcpy(path, IMAGE_DIR);
     strcat(path, filename);
@@ -209,9 +182,7 @@ void image_upload_response(ClientState *client)
     see_other_response(client->sock, MAIN_HTML);
 }
 
-/*
- * Write the header for a bitmap image response to the given fd.
- */
+// Write the header for a bitmap image response to the given fd
 void write_image_response_header(int fd)
 {
     char *response =
@@ -267,10 +238,7 @@ void bad_request_response(int fd, const char *message)
     sprintf(header_buf, response_header, strlen(body_buf));
     write(fd, header_buf, strlen(header_buf));
     write(fd, body_buf, strlen(body_buf));
-    // Because we are making some simplfications with the HTTP protocol
-    // the browser will get a "connection reset" message. This happens
-    // because our server is closing the connection and terminating the process.
-    // So this is really a hack.
+    // Hack: sleep to avoid connection reset message
     sleep(1);
 }
 

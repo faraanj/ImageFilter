@@ -2,12 +2,8 @@
 #include <stdlib.h>
 #include "bitmap.h"
 
-
-/*
- * Main filter loop.
- */
+// Main filter loop - converts pixels to greyscale
 void greyscale(Bitmap *bmp) {
-    // TODO: Complete this function.
     Pixel *p = malloc(sizeof(Pixel));
 
     for (int i = 0; i < bmp->height; i++){
@@ -21,11 +17,9 @@ void greyscale(Bitmap *bmp) {
         }
     }
     free(p);
-
 }
+
 int main() {
-    // Run the filter program with copy_filter to process the pixels.
-    // You shouldn't need to change this implementation.
     run_filter(greyscale, 1);
     return 0;
 }
